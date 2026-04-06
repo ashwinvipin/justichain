@@ -1,0 +1,1099 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>JustiChain AI — Intelligent Case Prioritization</title>
+  <link href="https://fonts.googleapis.com/css2?family=DM+Serif+Display:ital@0;1&family=DM+Sans:opsz,wght@9..40,300;9..40,400;9..40,500;9..40,600&display=swap" rel="stylesheet"/>
+  <style>
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+body{
+  font-family:'DM Sans',sans-serif;
+  background:linear-gradient(135deg,#e8e6f5 0%,#f5eaf7 35%,#e4eef8 70%,#e8f3ee 100%);
+  min-height:100vh;
+  color:#1a1a2e;
+}
+.app{max-width:1280px;margin:0 auto;padding:28px 20px 40px}
+.toast-container{position:fixed;top:18px;right:18px;z-index:1000;display:flex;flex-direction:column;gap:8px}
+.toast{display:flex;align-items:center;gap:8px;padding:11px 18px;border-radius:12px;font-size:13px;font-weight:500;color:#fff;box-shadow:0 4px 18px rgba(0,0,0,0.13);animation:fadeUp 0.3s ease;transition:opacity 0.3s,transform 0.3s}
+.toast-success{background:linear-gradient(135deg,#2e7d32,#43a047)}
+.toast-error{background:linear-gradient(135deg,#c62828,#e53935)}
+.toast-info{background:linear-gradient(135deg,#1565c0,#1e88e5)}
+.header{text-align:center;padding:10px 0 30px}
+.header h1{
+  font-family:'DM Serif Display',serif;
+  font-size:clamp(2.2rem,5vw,3.2rem);
+  background:linear-gradient(135deg,#5b21c9,#8b5cf6,#7c3aed);
+  -webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text;
+  font-style:italic;margin-bottom:6px;
+}
+.header p{color:#6b6b8a;font-size:14px;letter-spacing:0.01em}
+.stats-strip{
+  display:flex;gap:0;justify-content:center;
+  background:#fff;border-radius:50px;
+  border:1px solid rgba(200,200,230,0.5);
+  box-shadow:0 2px 12px rgba(90,40,200,0.06);
+  padding:10px 6px;margin:0 auto 24px;
+  width:fit-content;max-width:100%;flex-wrap:wrap;
+}
+.stat-item{display:flex;flex-direction:column;align-items:center;padding:4px 20px;min-width:80px}
+.stat-item+.stat-item{border-left:1px solid rgba(200,200,230,0.5)}
+.stat-num{font-family:'DM Serif Display',serif;font-size:1.25rem;font-weight:400;color:#5b21c9}
+.stat-lbl{font-size:10px;color:#9090b0;letter-spacing:0.05em;text-transform:uppercase;margin-top:1px}
+.stat-item.c-red .stat-num{color:#e53935}
+.stat-item.c-orange .stat-num{color:#f57c00}
+.stat-item.c-blue .stat-num{color:#1565c0}
+.grid{display:grid;grid-template-columns:1fr 1.05fr;gap:18px;margin-bottom:18px}
+@media(max-width:860px){.grid{grid-template-columns:1fr}}
+.card{
+  background:#fff;border-radius:18px;padding:24px;
+  box-shadow:0 2px 16px rgba(90,40,200,0.07);
+  border:1px solid rgba(220,220,240,0.6);
+  transition:box-shadow 0.25s,transform 0.25s;
+}
+.card:hover{box-shadow:0 6px 28px rgba(90,40,200,0.12);transform:translateY(-2px)}
+.section-title{
+  font-family:'DM Serif Display',serif;font-size:1.05rem;color:#2d2d5a;
+  margin-bottom:18px;display:flex;align-items:center;gap:8px;
+}
+.section-title svg{opacity:0.75;flex-shrink:0}
+label{display:block;font-size:11px;font-weight:600;color:#8080a0;letter-spacing:0.07em;text-transform:uppercase;margin-bottom:6px;margin-top:14px;}
+label:first-of-type{margin-top:0}
+input[type=text],textarea,select,input[type=number]{
+  width:100%;padding:11px 14px;background:#fff;
+  border:1.5px solid #e2e2ef;border-radius:10px;
+  font-family:'DM Sans',sans-serif;font-size:14px;color:#1a1a2e;
+  transition:border-color 0.2s,box-shadow 0.2s;outline:none;appearance:none;-webkit-appearance:none;
+}
+input[type=text]:focus,textarea:focus,select:focus,input[type=number]:focus{
+  border-color:#7c3aed;box-shadow:0 0 0 3px rgba(124,58,237,0.1);background:#fefeff;
+}
+textarea{height:88px;resize:vertical;line-height:1.5}
+select{
+  cursor:pointer;padding-right:36px;
+  background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 12 12'%3E%3Cpath fill='%238080a0' d='M6 8L1 3h10z'/%3E%3C/svg%3E");
+  background-repeat:no-repeat;background-position:right 13px center;
+}
+input[type=number]{width:90px;text-align:center}
+.years-row{display:flex;align-items:center;gap:12px}
+.years-hint{font-size:13px;color:#a0a0bb}
+.form-row{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-top:14px}
+.form-group label{margin-top:0}
+@media(max-width:480px){.form-row{grid-template-columns:1fr}}
+.opt-toggle{
+  display:inline-flex;align-items:center;gap:6px;margin-top:14px;
+  font-size:12px;font-weight:600;color:#7c3aed;cursor:pointer;
+  padding:3px 0;user-select:none;letter-spacing:0.03em;
+}
+.opt-toggle:hover{opacity:0.75}
+.opt-fields{margin-top:10px;padding-top:10px;border-top:1px solid #f0f0f8}
+.error-msg{color:#e53935;font-size:12px;margin-top:4px;font-weight:500;display:none}
+.btn-primary{
+  width:100%;margin-top:18px;padding:13px;
+  background:linear-gradient(135deg,#5b21c9,#7c3aed);
+  color:#fff;border:none;border-radius:12px;
+  font-family:'DM Sans',sans-serif;font-size:14px;font-weight:600;
+  cursor:pointer;letter-spacing:0.02em;
+  transition:all 0.2s;position:relative;overflow:hidden;
+}
+.btn-primary:hover{transform:scale(1.02);box-shadow:0 6px 22px rgba(124,58,237,0.35)}
+.btn-primary:active{transform:scale(0.98)}
+.btn-primary:disabled{opacity:0.6;cursor:not-allowed;transform:none}
+.btn-blue{background:linear-gradient(135deg,#1565c0,#1e88e5)}
+.btn-blue:hover{box-shadow:0 6px 22px rgba(30,136,229,0.32)}
+.empty-state{text-align:center;padding:44px 16px;color:#aaaacc}
+.empty-state svg{margin-bottom:14px;opacity:0.28}
+.empty-state p{font-size:13.5px;line-height:1.6}
+.empty-hint{font-size:11.5px;color:#c0c0d8;margin-top:6px}
+.skeleton{
+  background:linear-gradient(90deg,rgba(200,200,230,0.25) 25%,rgba(200,200,230,0.5) 50%,rgba(200,200,230,0.25) 75%);
+  background-size:200% 100%;animation:shimmer 1.5s infinite;
+  border-radius:8px;height:14px;margin:8px 0;
+}
+@keyframes shimmer{0%{background-position:200% 0}100%{background-position:-200% 0}}
+.gauge-wrap{text-align:center;margin-bottom:18px}
+.gauge-svg{width:170px;height:92px;display:block;margin:0 auto}
+.score-num{font-family:'DM Serif Display',serif;font-size:3rem;font-weight:400;line-height:1}
+.score-lbl{font-size:11px;color:#a0a0bb;margin-top:3px;letter-spacing:0.06em;text-transform:uppercase}
+.urgency-badge{
+  display:inline-flex;align-items:center;gap:6px;
+  padding:6px 16px;border-radius:50px;font-size:12.5px;font-weight:600;
+  letter-spacing:0.03em;margin-top:8px;
+}
+.badge-critical{background:rgba(229,57,53,0.1);color:#c62828;border:1.5px solid rgba(229,57,53,0.28)}
+.badge-high{background:rgba(245,124,0,0.1);color:#e65100;border:1.5px solid rgba(245,124,0,0.28)}
+.badge-medium{background:rgba(249,168,37,0.1);color:#f57f17;border:1.5px solid rgba(249,168,37,0.28)}
+.badge-low{background:rgba(30,136,229,0.1);color:#1565c0;border:1.5px solid rgba(30,136,229,0.28)}
+.dot{width:7px;height:7px;border-radius:50%;display:inline-block}
+.dot-critical{background:#e53935;animation:pulse 1.2s infinite}
+.dot-high{background:#f57c00}
+.dot-medium{background:#f9a825}
+.dot-low{background:#1e88e5}
+.result-row{display:flex;justify-content:space-between;align-items:center;padding:9px 0;border-bottom:1px solid #f0f0f8;font-size:13.5px}
+.result-row:last-child{border-bottom:none}
+.rl{color:#8080a0;font-size:12.5px}
+.rv{font-weight:600;color:#2d2d5a}
+.conf-wrap{padding:10px 0 2px}
+.conf-labels{display:flex;justify-content:space-between;font-size:11px;color:#8080a0;font-weight:600;letter-spacing:0.04em;text-transform:uppercase;margin-bottom:5px}
+.conf-track{height:7px;background:#ebebf5;border-radius:50px;overflow:hidden}
+.conf-fill{height:100%;border-radius:50px;transition:width 0.85s cubic-bezier(0.4,0,0.2,1);width:0%}
+.flags-wrap{display:flex;flex-wrap:wrap;gap:7px;margin-top:4px}
+.flag-pill{
+  display:inline-flex;align-items:center;gap:4px;
+  padding:4px 11px;border-radius:50px;font-size:11.5px;font-weight:600;
+  animation:fadeUp 0.35s ease;cursor:default;position:relative;
+}
+.flag-pill:hover .tip{opacity:1;transform:translateX(-50%) translateY(-2px)}
+.tip{position:absolute;bottom:calc(100% + 5px);left:50%;transform:translateX(-50%);background:#2d2d5a;color:#fff;font-size:10.5px;padding:3px 9px;border-radius:7px;white-space:nowrap;opacity:0;transition:all 0.18s;pointer-events:none;z-index:10}
+.fp-medical{background:rgba(229,57,53,0.09);color:#c62828;border:1px solid rgba(229,57,53,0.22)}
+.fp-women{background:rgba(233,30,99,0.09);color:#880e4f;border:1px solid rgba(233,30,99,0.22)}
+.fp-elderly{background:rgba(123,31,162,0.09);color:#6a1b9a;border:1px solid rgba(123,31,162,0.22)}
+.fp-undertrial{background:rgba(230,81,0,0.09);color:#bf360c;border:1px solid rgba(230,81,0,0.22)}
+.explain-panel{margin-top:14px;background:#f8f8ff;border-radius:12px;padding:14px}
+.explain-head{font-weight:600;font-size:12.5px;color:#3a3a7a;margin-bottom:9px;display:flex;align-items:center;gap:5px}
+.explain-list{list-style:none}
+.explain-list li{display:flex;align-items:flex-start;gap:7px;padding:6px 0;border-bottom:1px solid #ededf8;font-size:12.5px;color:#3a3a5a;animation:fadeRight 0.35s ease both}
+.explain-list li:last-child{border-bottom:none}
+.ex-icon{width:19px;height:19px;border-radius:5px;display:flex;align-items:center;justify-content:center;font-size:9px;flex-shrink:0;margin-top:1px}
+.ex-bonus{background:rgba(76,175,80,0.14);color:#2e7d32;font-size:10.5px;font-weight:700;white-space:nowrap;margin-left:auto;padding:2px 7px;border-radius:50px}
+.insight-box{margin-top:11px;background:rgba(92,53,201,0.05);border:1px solid rgba(124,58,237,0.14);border-radius:11px;padding:11px 13px;font-size:12.5px;color:#3a3a5a;line-height:1.6;display:flex;gap:9px;align-items:flex-start}
+.insight-icon{font-size:15px;flex-shrink:0;margin-top:1px}
+.precedent-panel{margin-top:12px;background:rgba(92,53,201,0.04);border:1px solid rgba(124,58,237,0.13);border-radius:12px;padding:13px}
+.prec-title{font-size:11px;font-weight:700;color:#5b21c9;letter-spacing:0.06em;text-transform:uppercase;margin-bottom:9px;display:flex;align-items:center;gap:5px}
+.prec-list{list-style:none;display:flex;flex-direction:column;gap:7px}
+.prec-list li{display:flex;align-items:flex-start;gap:8px;font-size:12px;color:#3a3a5a;line-height:1.5;animation:fadeRight 0.3s ease both}
+.prec-dot{width:6px;height:6px;border-radius:50%;background:#7c3aed;flex-shrink:0;margin-top:4px}
+.case-id{font-size:10px;color:#aaaacc;font-family:monospace;margin-top:12px;word-break:break-all}
+.file-section{margin-bottom:18px}
+.new-badge{display:inline-flex;align-items:center;padding:2px 8px;background:linear-gradient(135deg,#5b21c9,#7c3aed);color:#fff;font-size:9.5px;font-weight:700;border-radius:50px;letter-spacing:0.07em;margin-left:6px;}
+.file-section-desc{font-size:12.5px;color:#8080a0;line-height:1.6;margin-bottom:16px;padding-bottom:14px;border-bottom:1px solid #f0f0f8}
+.file-grid{display:grid;grid-template-columns:1fr 1fr;gap:16px;margin-bottom:16px}
+@media(max-width:700px){.file-grid{grid-template-columns:1fr}}
+.drop-zone{
+  border:2px dashed rgba(124,58,237,0.3);border-radius:14px;
+  padding:26px 16px;text-align:center;cursor:pointer;
+  transition:all 0.22s;background:rgba(124,58,237,0.025);
+  display:flex;flex-direction:column;align-items:center;gap:9px;
+  min-height:150px;justify-content:center;
+}
+.drop-zone:hover{border-color:rgba(124,58,237,0.6);background:rgba(124,58,237,0.06)}
+.drop-zone.over{border-color:#7c3aed;background:rgba(124,58,237,0.1);transform:scale(1.01)}
+.dz-title{font-size:13.5px;font-weight:500;color:#3a3a5a}
+.dz-title span{color:#7c3aed;font-weight:600;text-decoration:underline;text-underline-offset:2px}
+.dz-hint{font-size:11px;color:#a0a0bb}
+.file-chosen{display:flex;align-items:center;gap:6px;background:rgba(76,175,80,0.09);border:1px solid rgba(76,175,80,0.28);border-radius:50px;padding:4px 12px;font-size:11.5px;font-weight:500;color:#2e7d32;margin-top:4px}
+.file-chosen button{background:none;border:none;cursor:pointer;color:#a0a0bb;font-size:12px;padding:0 0 0 4px;line-height:1}
+.file-chosen button:hover{color:#e53935}
+.file-result-panel{background:#f8f8ff;border:1px solid #ebebf5;border-radius:14px;padding:18px;min-height:150px;display:flex;flex-direction:column;justify-content:center}
+.file-empty{text-align:center;color:#c0c0d8;display:flex;flex-direction:column;align-items:center;gap:8px}
+.file-empty p{font-size:12.5px}
+.file-row{display:flex;justify-content:space-between;align-items:center;padding:7px 0;border-bottom:1px solid #ebebf8;font-size:12.5px}
+.file-row:last-child{border-bottom:none}
+.fr-lbl{color:#8080a0;font-size:11.5px}
+.fr-val{font-weight:600;color:#2d2d5a}
+.reason-box{margin:10px 0;padding:9px 11px;background:#fff;border:1px solid #ebebf5;border-radius:9px;font-size:12px;color:#3a3a5a;line-height:1.6}
+.history-card{margin-bottom:18px}
+.history-header{display:flex;justify-content:space-between;align-items:center;margin-bottom:14px;flex-wrap:wrap;gap:10px}
+.history-count{font-size:12px;color:#a0a0bb;font-weight:400;margin-left:6px}
+.btn-refresh{padding:6px 14px;background:rgba(92,53,201,0.07);color:#5b21c9;border:1px solid rgba(92,53,201,0.2);border-radius:9px;font-family:'DM Sans',sans-serif;font-size:11.5px;font-weight:600;cursor:pointer;transition:all 0.2s}
+.btn-refresh:hover{background:rgba(92,53,201,0.14)}
+.btn-clear{padding:6px 14px;background:rgba(229,57,53,0.07);color:#c62828;border:1px solid rgba(229,57,53,0.2);border-radius:9px;font-family:'DM Sans',sans-serif;font-size:11.5px;font-weight:600;cursor:pointer;transition:all 0.2s}
+.btn-clear:hover{background:rgba(229,57,53,0.14)}
+.filter-row{display:flex;gap:7px;flex-wrap:wrap;margin-bottom:14px}
+.filter-btn{padding:5px 16px;border-radius:50px;border:1.5px solid #e0e0ef;background:#fff;font-size:12px;font-weight:500;cursor:pointer;transition:all 0.18s;font-family:'DM Sans',sans-serif;color:#6060a0;}
+.filter-btn:hover{background:#f5f5ff}
+.filter-btn.active{background:linear-gradient(135deg,#5b21c9,#7c3aed);color:#fff;border-color:transparent}
+.tbl-wrap{overflow-x:auto;border-radius:12px;border:1px solid #ebebf5}
+table{width:100%;border-collapse:collapse;font-size:12.5px;min-width:680px}
+thead{position:sticky;top:0;z-index:2}
+th{background:#f6f6ff;padding:11px 13px;text-align:left;font-size:10.5px;font-weight:700;color:#8080a0;letter-spacing:0.06em;text-transform:uppercase;border-bottom:1px solid #ebebf5}
+td{padding:10px 13px;border-bottom:1px solid #f3f3f8;color:#2d2d5a;vertical-align:middle}
+tr:last-child td{border-bottom:none}
+tr:nth-child(even) td{background:rgba(245,245,255,0.5)}
+tr:hover td{background:rgba(124,58,237,0.04);transition:background 0.14s}
+.score-cell{font-family:'DM Serif Display',serif;font-size:1.25rem;font-weight:400}
+.no-results{text-align:center;padding:28px;color:#a0a0bb;font-size:13px}
+.mini-flag{display:inline-block;width:19px;height:19px;border-radius:50%;font-size:10px;text-align:center;line-height:19px;cursor:help;background:rgba(200,200,230,0.28)}
+.status-sel{padding:4px 8px;border:1px solid #e2e2ef;border-radius:7px;font-family:'DM Sans',sans-serif;font-size:11px;font-weight:500;cursor:pointer;background:#fff;color:#3a3a5a;outline:none}
+.status-sel:focus{border-color:#7c3aed}
+.btn-del{padding:3px 9px;background:rgba(229,57,53,0.08);color:#c62828;border:1px solid rgba(229,57,53,0.2);border-radius:7px;cursor:pointer;font-size:11px;font-family:'DM Sans',sans-serif;font-weight:600;transition:all 0.18s}
+.btn-del:hover{background:rgba(229,57,53,0.18)}
+.pagination{display:flex;gap:5px;justify-content:center;margin-top:14px;flex-wrap:wrap}
+.page-btn{padding:5px 13px;border-radius:7px;border:1.5px solid #e0e0ef;background:#fff;font-size:12.5px;font-family:'DM Sans',sans-serif;cursor:pointer;color:#6060a0;transition:all 0.18s}
+.page-btn:hover{background:#f5f5ff}
+.page-btn.active{background:linear-gradient(135deg,#5b21c9,#7c3aed);color:#fff;border-color:transparent}
+@keyframes fadeUp{from{opacity:0;transform:translateY(14px)}to{opacity:1;transform:translateY(0)}}
+@keyframes fadeRight{from{opacity:0;transform:translateX(-8px)}to{opacity:1;transform:translateX(0)}}
+@keyframes pulse{0%,100%{opacity:1}50%{opacity:0.55}}
+  </style>
+</head>
+<body>
+
+<div class="toast-container" id="toastContainer"></div>
+
+<div class="app">
+  <div class="header">
+    <h1>JustiChain AI</h1>
+    <p>Prioritizing Justice. Empowering Decisions.</p>
+  </div>
+
+  <div class="stats-strip">
+    <div class="stat-item">
+      <span class="stat-num" id="sTotal">0</span>
+      <span class="stat-lbl">Total Cases</span>
+    </div>
+    <div class="stat-item c-red">
+      <span class="stat-num" id="sCritical">0</span>
+      <span class="stat-lbl">Critical</span>
+    </div>
+    <div class="stat-item c-orange">
+      <span class="stat-num" id="sHigh">0</span>
+      <span class="stat-lbl">High</span>
+    </div>
+    <div class="stat-item">
+      <span class="stat-num" id="sAvg">—</span>
+      <span class="stat-lbl">Avg Score</span>
+    </div>
+    <div class="stat-item c-blue">
+      <span class="stat-num" id="sPending">0</span>
+      <span class="stat-lbl">Pending</span>
+    </div>
+  </div>
+
+  <div class="grid">
+    <!-- LEFT: Case Submission -->
+    <div class="card">
+      <div class="section-title">
+        <svg width="17" height="17" viewBox="0 0 17 17" fill="none">
+          <rect x="1" y="1.5" width="15" height="14" rx="3" stroke="#5b21c9" stroke-width="1.4"/>
+          <path d="M4 6.5h9M4 9.5h6" stroke="#5b21c9" stroke-width="1.3" stroke-linecap="round"/>
+        </svg>
+        Case Submission
+      </div>
+
+      <label for="caseTitle">Case Title</label>
+      <input type="text" id="caseTitle" placeholder="e.g. Bail application in Sessions Court..."/>
+      <div class="error-msg" id="err-title">Please enter a case title</div>
+
+      <label for="caseDesc">Case Description</label>
+      <textarea id="caseDesc" placeholder="Describe the case details, parties involved, urgency factors..."></textarea>
+      <div class="error-msg" id="err-desc">Please enter a case description</div>
+
+      <label for="caseType">Case Type</label>
+      <select id="caseType">
+        <option value="Civil">Civil</option>
+        <option value="Criminal">Criminal</option>
+        <option value="Family/Matrimonial">Family / Matrimonial</option>
+        <option value="Property">Property</option>
+        <option value="Bail">Bail</option>
+      </select>
+
+      <label for="yearsPending">Years Pending</label>
+      <div class="years-row">
+        <input type="number" id="yearsPending" value="1" min="0" max="50"/>
+        <span class="years-hint">years in the court system</span>
+      </div>
+
+      <div class="opt-toggle" id="optToggle" onclick="toggleOpt()">
+        <svg width="11" height="11" viewBox="0 0 11 11" fill="none" id="optArrow" style="transition:transform 0.2s">
+          <path d="M2 4l3.5 3.5L9 4" stroke="#7c3aed" stroke-width="1.4" stroke-linecap="round"/>
+        </svg>
+        Optional Details
+      </div>
+      <div class="opt-fields" id="optFields" style="display:none">
+        <div class="form-row">
+          <div class="form-group">
+            <label for="petitioner">Petitioner</label>
+            <input type="text" id="petitioner" placeholder="Name of petitioner"/>
+          </div>
+          <div class="form-group">
+            <label for="respondent">Respondent</label>
+            <input type="text" id="respondent" placeholder="Name of respondent"/>
+          </div>
+        </div>
+        <div class="form-row">
+          <div class="form-group">
+            <label for="courtName">Court Name</label>
+            <input type="text" id="courtName" placeholder="e.g. Delhi High Court"/>
+          </div>
+          <div class="form-group">
+            <label for="judgeName">Judge Name</label>
+            <input type="text" id="judgeName" placeholder="Presiding Judge"/>
+          </div>
+        </div>
+      </div>
+
+      <button class="btn-primary" id="analyzeBtn" onclick="analyzeCase()">
+        ⚡ Analyze &amp; Prioritize Case
+      </button>
+    </div>
+
+    <!-- RIGHT: Priority Analysis -->
+    <div class="card" id="resultsPanel">
+      <div class="section-title">
+        <svg width="17" height="17" viewBox="0 0 17 17" fill="none">
+          <circle cx="8.5" cy="8.5" r="6.5" stroke="#5b21c9" stroke-width="1.4"/>
+          <path d="M8.5 5v3.5l2.5 2" stroke="#5b21c9" stroke-width="1.3" stroke-linecap="round"/>
+        </svg>
+        Priority Analysis
+      </div>
+
+      <div id="emptyState" class="empty-state">
+        <svg width="58" height="58" viewBox="0 0 58 58" fill="none">
+          <circle cx="29" cy="29" r="25" stroke="#b0b0cc" stroke-width="1.8"/>
+          <path d="M29 17v13M29 34v4" stroke="#b0b0cc" stroke-width="2.2" stroke-linecap="round"/>
+        </svg>
+        <p>Submit a case to see intelligent<br>AI-powered prioritization</p>
+        <p class="empty-hint">All data is saved locally in your browser</p>
+      </div>
+
+      <div id="loadingState" style="display:none">
+        <div class="skeleton" style="width:55%;margin:0 auto 8px;height:18px"></div>
+        <div class="skeleton" style="width:38%;margin:0 auto 16px;height:12px"></div>
+        <div class="skeleton"></div>
+        <div class="skeleton" style="width:80%"></div>
+        <div class="skeleton" style="width:65%"></div>
+        <div class="skeleton" style="width:90%;margin-top:14px"></div>
+        <div class="skeleton" style="width:70%"></div>
+      </div>
+
+      <div id="resultContent" style="display:none"></div>
+    </div>
+  </div>
+
+  <!-- Police Report File Upload -->
+  <div class="card file-section">
+    <div class="section-title">
+      <svg width="17" height="17" viewBox="0 0 17 17" fill="none">
+        <path d="M10 1.5H4a1.5 1.5 0 00-1.5 1.5v11A1.5 1.5 0 004 15.5h9A1.5 1.5 0 0014.5 14V6l-4.5-4.5z" stroke="#5b21c9" stroke-width="1.4" stroke-linejoin="round"/>
+        <path d="M10 1.5V6H14.5" stroke="#5b21c9" stroke-width="1.3" stroke-linecap="round" stroke-linejoin="round"/>
+        <path d="M5.5 10h6M5.5 12.5h4" stroke="#5b21c9" stroke-width="1.2" stroke-linecap="round"/>
+      </svg>
+      AI Priority from Police Report
+      <span class="new-badge">NEW</span>
+    </div>
+    <p class="file-section-desc">Upload a police report or case document. The AI scans its filename and text content to automatically detect crime type, severity and humanitarian flags — then assigns a priority score with precedent cases.</p>
+
+    <div class="file-grid">
+      <div class="drop-zone" id="dropZone" onclick="document.getElementById('fileInput').click()" ondragover="onDragOver(event)" ondrop="onDrop(event)" ondragleave="onDragLeave(event)">
+        <svg width="34" height="34" viewBox="0 0 34 34" fill="none">
+          <circle cx="17" cy="17" r="15" stroke="rgba(124,58,237,0.28)" stroke-width="1.4"/>
+          <path d="M17 22v-8M13 18l4-4 4 4" stroke="#7c3aed" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round"/>
+          <path d="M12 24h10" stroke="#7c3aed" stroke-width="1.4" stroke-linecap="round"/>
+        </svg>
+        <p class="dz-title">Drop file here or <span>click to browse</span></p>
+        <p class="dz-hint">Supports .txt, .pdf, .doc, .docx — keywords auto-detected</p>
+        <input type="file" id="fileInput" accept=".txt,.pdf,.doc,.docx,.rtf" style="display:none" onchange="onFileSelect(event)"/>
+        <div class="file-chosen" id="fileChosen" style="display:none">
+          <svg width="13" height="13" viewBox="0 0 13 13" fill="none"><circle cx="6.5" cy="6.5" r="5.5" fill="rgba(76,175,80,0.18)" stroke="#43a047" stroke-width="1.2"/><path d="M3.5 6.5l2 2 4-4" stroke="#43a047" stroke-width="1.3" stroke-linecap="round" stroke-linejoin="round"/></svg>
+          <span id="fileChosenName"></span>
+          <button onclick="clearFile(event)">✕</button>
+        </div>
+      </div>
+
+      <div class="file-result-panel" id="fileResultPanel">
+        <div class="file-empty" id="fileEmpty">
+          <svg width="30" height="30" viewBox="0 0 30 30" fill="none"><rect x="5" y="2.5" width="13" height="17" rx="2" stroke="#c8c8d8" stroke-width="1.4"/><path d="M9 8h5M9 11h5M9 14h3.5" stroke="#c8c8d8" stroke-width="1.2" stroke-linecap="round"/><path d="M15.5 2.5v5h5" stroke="#c8c8d8" stroke-width="1.2" stroke-linecap="round" stroke-linejoin="round"/></svg>
+          <p>Upload a report to see analysis</p>
+        </div>
+        <div id="fileLoadSkel" style="display:none">
+          <div class="skeleton" style="width:60%;margin:0 auto 8px;height:16px"></div>
+          <div class="skeleton" style="width:40%;margin:0 auto 12px;height:12px"></div>
+          <div class="skeleton"></div>
+          <div class="skeleton" style="width:75%"></div>
+        </div>
+        <div id="fileResult" style="display:none"></div>
+      </div>
+    </div>
+
+    <button class="btn-primary btn-blue" id="fileBtn" onclick="analyzeFile()">
+      📄 Analyze Police Report
+    </button>
+  </div>
+
+  <!-- Case History -->
+  <div class="card history-card">
+    <div class="history-header">
+      <div class="section-title" style="margin:0">
+        <svg width="17" height="17" viewBox="0 0 17 17" fill="none">
+          <path d="M2.5 4h12M2.5 8h8M2.5 12h9.5" stroke="#5b21c9" stroke-width="1.4" stroke-linecap="round"/>
+        </svg>
+        Case History
+        <span class="history-count" id="histCount"></span>
+      </div>
+      <div style="display:flex;gap:8px;flex-wrap:wrap;align-items:center">
+        <button class="btn-refresh" onclick="loadHistory()">↻ Refresh</button>
+        <button class="btn-clear" onclick="clearAll()">✕ Clear All</button>
+      </div>
+    </div>
+
+    <div class="filter-row">
+      <button class="filter-btn active" onclick="setFilter('All',this)">All</button>
+      <button class="filter-btn" onclick="setFilter('Critical',this)">Critical</button>
+      <button class="filter-btn" onclick="setFilter('High',this)">High</button>
+      <button class="filter-btn" onclick="setFilter('Medium',this)">Medium</button>
+      <button class="filter-btn" onclick="setFilter('Low',this)">Low</button>
+    </div>
+
+    <div class="tbl-wrap">
+      <table>
+        <thead>
+          <tr>
+            <th>Score</th><th>Urgency</th><th>Case Title</th>
+            <th>Classification</th><th>Pending</th><th>Flags</th>
+            <th>Status</th><th>Actions</th>
+          </tr>
+        </thead>
+        <tbody id="histBody">
+          <tr><td colspan="8" class="no-results">No cases yet — submit one above</td></tr>
+        </tbody>
+      </table>
+    </div>
+    <div class="pagination" id="pagination"></div>
+  </div>
+</div>
+
+<script>
+'use strict';
+
+/* ── In-memory storage (replaces backend) ── */
+let caseStore = JSON.parse(localStorage.getItem('justichain_cases') || '[]');
+let filterState = 'All', pageState = 1;
+const LIMIT = 20;
+
+function saveStore() {
+  localStorage.setItem('justichain_cases', JSON.stringify(caseStore));
+}
+
+/* ── Color helpers ── */
+function scoreColor(s) {
+  return s >= 80 ? '#e53935' : s >= 60 ? '#f57c00' : s >= 40 ? '#f9a825' : '#1e88e5';
+}
+function urgencyMeta(u) {
+  return { Critical:{cls:'badge-critical',dot:'dot-critical'}, High:{cls:'badge-high',dot:'dot-high'}, Medium:{cls:'badge-medium',dot:'dot-medium'}, Low:{cls:'badge-low',dot:'dot-low'} }[u] || {cls:'badge-low',dot:'dot-low'};
+}
+function gaugeCol(s) {
+  return s >= 80 ? ['#e53935','#ff5722'] : s >= 60 ? ['#f57c00','#ff9800'] : s >= 40 ? ['#f9a825','#ffc107'] : ['#1e88e5','#42a5f5'];
+}
+
+/* ── Gauge SVG ── */
+function gaugeSVG(score) {
+  const [c1,c2] = gaugeCol(score);
+  const r=68,cx=85,cy=82;
+  const ea = Math.PI + (score/100)*Math.PI;
+  const x2 = cx + r*Math.cos(ea), y2 = cy + r*Math.sin(ea);
+  const lg = score > 0 ? 1 : 0;
+  return `<svg class="gauge-svg" viewBox="0 0 170 88" xmlns="http://www.w3.org/2000/svg">
+    <defs><linearGradient id="gg" x1="0%" y1="0%" x2="100%" y2="0%">
+      <stop offset="0%" stop-color="${c1}"/><stop offset="100%" stop-color="${c2}"/>
+    </linearGradient></defs>
+    <path d="M${cx-r} ${cy} A${r} ${r} 0 0 1 ${cx+r} ${cy}" fill="none" stroke="rgba(200,200,230,0.35)" stroke-width="9" stroke-linecap="round"/>
+    <path d="M${cx-r} ${cy} A${r} ${r} 0 ${lg} 1 ${x2} ${y2}" fill="none" stroke="url(#gg)" stroke-width="9" stroke-linecap="round"/>
+    <circle cx="${cx}" cy="${cy}" r="4.5" fill="${c1}"/>
+  </svg>`;
+}
+
+/* ── Flag definitions ── */
+const FLAGS = {
+  medical:    {label:'Medical Emergency',  icon:'🏥',cls:'fp-medical',   tip:'Life-threatening condition'},
+  women:      {label:'Women / Vulnerable', icon:'👩',cls:'fp-women',     tip:'Women or vulnerable individual'},
+  elderly:    {label:'Elderly',            icon:'👴',cls:'fp-elderly',   tip:'Elderly person involved'},
+  undertrial: {label:'Undertrial Prisoner',icon:'🔒',cls:'fp-undertrial',tip:'Undertrial prisoner in custody'}
+};
+function flagsHTML(flags) {
+  if (!flags || !flags.length) return '<span style="color:#aaaacc;font-size:12px">No flags detected</span>';
+  return flags.map(f => {
+    const d = FLAGS[f] || {label:f,icon:'•',cls:'',tip:''};
+    return `<span class="flag-pill ${d.cls}">${d.icon} ${d.label}<span class="tip">${d.tip}</span></span>`;
+  }).join('');
+}
+function miniFlags(flags) {
+  if (!flags || !flags.length) return '<span style="color:#ccc;font-size:10px">—</span>';
+  return flags.map(f => {
+    const d = FLAGS[f] || {icon:'•',label:f};
+    return `<span class="mini-flag" title="${d.label}">${d.icon}</span>`;
+  }).join('');
+}
+
+/* ── Animated counter ── */
+function animCount(el, target) {
+  let cur = 0;
+  const step = target / 24;
+  const t = setInterval(() => {
+    cur = Math.min(cur + step, target);
+    el.textContent = Math.round(cur);
+    if (cur >= target) clearInterval(t);
+  }, 24);
+}
+
+/* ── Confidence ── */
+function confidence(score) { return Math.min(97, Math.max(55, Math.round(55 + (score/100)*42))); }
+function confColor(p) {
+  return p >= 85 ? 'linear-gradient(90deg,#e53935,#ff5722)' :
+         p >= 70 ? 'linear-gradient(90deg,#f57c00,#ff9800)' :
+         p >= 60 ? 'linear-gradient(90deg,#f9a825,#ffc107)' :
+                   'linear-gradient(90deg,#1e88e5,#42a5f5)';
+}
+
+/* ── Precedent database ── */
+const PREC = {
+  'Bail':[
+    {n:'Arnesh Kumar vs State of Bihar (2014)',d:'Supreme Court guidelines on arrest and bail — personal liberty safeguards.'},
+    {n:'Sanjay Chandra vs CBI (2011)',d:'Bail in economic offences — liberty vs public interest balance.'},
+    {n:'Dataram Singh vs State of UP (2018)',d:'Pre-arrest bail and fundamental rights under Art. 21.'}
+  ],
+  'Criminal':[
+    {n:'Mukesh vs State for NCT of Delhi (2017)',d:'Landmark ruling on criminal sentencing and victim rights.'},
+    {n:'Bachan Singh vs State of Punjab (1980)',d:'Rarest of rare doctrine — framework for capital punishment.'},
+    {n:'State of Maharashtra vs Salman Khan (2015)',d:'Criminal negligence and accountability in serious offences.'}
+  ],
+  'Family/Matrimonial':[
+    {n:'Shayara Bano vs Union of India (2017)',d:'Triple talaq declared unconstitutional — women\'s rights.'},
+    {n:'Githa Hariharan vs Reserve Bank of India (1999)',d:'Mother as natural guardian — equal child custody rights.'},
+    {n:'Lalita Toppo vs State of Jharkhand (2018)',d:'Maintenance rights under Domestic Violence Act.'}
+  ],
+  'Property':[
+    {n:'Suraj Lamp & Industries vs State of Haryana (2012)',d:'GPA sales invalid — original title deeds mandatory.'},
+    {n:'Vidya Devi vs State of HP (2020)',d:'Adverse possession and land rights of vulnerable owners.'},
+    {n:'Dahiben vs Arvindbhai Bhanusali (2020)',d:'Limitation period in property suits — fraud exception.'}
+  ],
+  'Civil':[
+    {n:'Salem Advocate Bar Assoc. vs Union of India (2005)',d:'CPC amendments for speedy civil trials.'},
+    {n:'Imtiyaz Ahmad vs State of UP (2012)',d:'Supreme Court on pendency crisis and trial time-limits.'},
+    {n:'Rajendra Agri. University vs Vinod Kumar (2021)',d:'Service disputes — timely disposal obligation.'}
+  ]
+};
+const FLAG_PREC = {
+  medical:    {n:'Parmanand Katara vs Union of India (1989)',d:'Right to emergency medical treatment — courts must act.'},
+  undertrial: {n:'Hussainara Khatoon vs State of Bihar (1979)',d:'Undertrial right to speedy trial — landmark habeas corpus.'},
+  women:      {n:'Vishaka vs State of Rajasthan (1997)',d:'Protection of women — guidelines before POSH Act.'},
+  elderly:    {n:'Ashwani Kumar vs Union of India (2019)',d:'Senior citizens\' right to expedited legal remedies.'}
+};
+
+function precedentsHTML(cls, flags) {
+  const base = PREC[cls] || PREC['Civil'];
+  let list = base.slice(0,2);
+  for (const f of (flags||[])) { if (FLAG_PREC[f]) { list.push(FLAG_PREC[f]); break; } }
+  if (list.length < 3) list.push(base[2]);
+  const items = list.map((p,i) => `
+    <li style="animation-delay:${i*0.09}s">
+      <span class="prec-dot"></span>
+      <div><span style="font-weight:600;color:#2d2d5a">${esc(p.n)}</span><br>
+      <span style="font-size:11px;color:#8080a0">${esc(p.d)}</span></div>
+    </li>`).join('');
+  return `<div class="precedent-panel">
+    <div class="prec-title">
+      <svg width="12" height="12" viewBox="0 0 12 12" fill="none"><rect x="1" y="1" width="10" height="10" rx="1.5" stroke="#5b21c9" stroke-width="1.1"/><path d="M3 4h6M3 6h6M3 8h4" stroke="#5b21c9" stroke-width="1" stroke-linecap="round"/></svg>
+      AI Matched Similar Cases
+    </div>
+    <ul class="prec-list">${items}</ul>
+  </div>`;
+}
+
+/* ── AI Analysis via Anthropic API ── */
+async function analyzeCase() {
+  const title       = document.getElementById('caseTitle').value.trim();
+  const description = document.getElementById('caseDesc').value.trim();
+  const caseType    = document.getElementById('caseType').value;
+  const yearsPending= Math.max(0, parseInt(document.getElementById('yearsPending').value)||0);
+
+  let ok = true;
+  const et = document.getElementById('err-title');
+  const ed = document.getElementById('err-desc');
+  et.style.display = !title ? 'block' : 'none';
+  ed.style.display = !description ? 'block' : 'none';
+  if (!title || !description) ok = false;
+
+  if (!ok) {
+    toast('Please fill required fields','error');
+    return;
+  }
+
+  const btn = document.getElementById('analyzeBtn');
+  btn.disabled = true;
+  btn.textContent = '⏳ Analyzing...';
+
+  document.getElementById('emptyState').style.display = 'none';
+  document.getElementById('loadingState').style.display = 'block';
+  document.getElementById('resultContent').style.display = 'none';
+
+  try {
+    // 🔥 CALL YOUR FLASK BACKEND
+    const response = await fetch("http://127.0.0.1:5000/predict", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json"
+      },
+      body: JSON.stringify({
+        age: yearsPending,        // using years as input
+        severity: 3,              // you can improve later
+        urgency: 1,
+        case_type: caseType
+      })
+    });
+
+    const data = await response.json();
+
+    const score = Math.round(data.prediction);
+
+    const urgency =
+      score >= 80 ? 'Critical' :
+      score >= 60 ? 'High' :
+      score >= 40 ? 'Medium' : 'Low';
+
+    const result = {
+      id: "case_" + Date.now(),
+      title,
+      years_pending: yearsPending,
+      classification: caseType,
+      priority_score: score,
+      urgency_level: urgency,
+      flags: [],
+      reasons: [
+        {
+          text: "ML model predicted this priority",
+          icon: "🤖",
+          color: "rgba(124,58,237,0.12)",
+          bonus: "+" + score
+        }
+      ],
+      insight: "This prediction is generated using your trained machine learning model."
+    };
+
+    caseStore.unshift(result);
+    saveStore();
+
+    renderResult(result);
+    loadHistory();
+    loadStats();
+
+    toast("Prediction successful!", "success");
+
+  } catch (err) {
+    console.error(err);
+    toast("Backend error. Make sure Flask is running.", "error");
+  } finally {
+    btn.disabled = false;
+    btn.textContent = "⚡ Analyze & Prioritize Case";
+  }
+}
+/* ── Optional toggle ── */
+function toggleOpt() {
+  const f = document.getElementById('optFields');
+  const a = document.getElementById('optArrow');
+  const open = f.style.display === 'none';
+  f.style.display = open ? 'block' : 'none';
+  a.style.transform = open ? 'rotate(180deg)' : '';
+}
+
+/* ── Render result panel ── */
+function renderResult(c) {
+  document.getElementById('loadingState').style.display = 'none';
+  const rc = document.getElementById('resultContent');
+  rc.style.display = 'block';
+  const { id, priority_score:score, urgency_level:urgency, classification:cls,
+          title, years_pending:years, flags=[], reasons=[], insight='', court_name, judge_name } = c;
+  const u = urgencyMeta(urgency);
+  const conf = confidence(score);
+  const barcol = confColor(conf);
+
+  const reasonsHTML = (reasons||[]).map((r,i) => `
+    <li style="animation-delay:${i*0.07}s">
+      <span class="ex-icon" style="background:${r.color||'rgba(200,200,230,0.2)'}">${r.icon||'📋'}</span>
+      <span>${esc(r.text)}</span>
+      <span class="ex-bonus">${r.bonus||'+0'}</span>
+    </li>`).join('');
+
+  rc.innerHTML = `
+    <div class="gauge-wrap">
+      ${gaugeSVG(score)}
+      <div class="score-num" id="animScore" style="color:${scoreColor(score)}">0</div>
+      <div class="score-lbl">Priority Score</div>
+      <div style="text-align:center;margin-top:7px">
+        <span class="urgency-badge ${u.cls}">
+          <span class="dot ${u.dot}"></span>${urgency} Priority
+        </span>
+      </div>
+    </div>
+
+    <div class="conf-wrap">
+      <div class="conf-labels"><span>AI Confidence</span><span>${conf}%</span></div>
+      <div class="conf-track"><div class="conf-fill" id="confBar" style="background:${barcol}"></div></div>
+    </div>
+
+    <div class="result-row"><span class="rl">Classification</span><span class="rv">⚖️ ${cls}</span></div>
+    <div class="result-row"><span class="rl">Case Title</span><span class="rv" style="font-size:11.5px;max-width:180px;text-align:right">${esc(title)}</span></div>
+    <div class="result-row"><span class="rl">Years Pending</span><span class="rv">${years} year${years!==1?'s':''}</span></div>
+    ${court_name ? `<div class="result-row"><span class="rl">Court</span><span class="rv" style="font-size:11.5px">${esc(court_name)}</span></div>` : ''}
+    ${judge_name ? `<div class="result-row"><span class="rl">Judge</span><span class="rv" style="font-size:11.5px">${esc(judge_name)}</span></div>` : ''}
+    <div class="result-row" style="flex-direction:column;align-items:flex-start;gap:7px">
+      <span class="rl">Humanitarian Flags</span>
+      <div class="flags-wrap">${flagsHTML(flags)}</div>
+    </div>
+
+    ${reasonsHTML ? `<div class="explain-panel">
+      <div class="explain-head">🧠 Why this case is prioritized</div>
+      <ul class="explain-list">${reasonsHTML}</ul>
+    </div>` : ''}
+
+    ${insight ? `<div class="insight-box">
+      <span class="insight-icon">💡</span><span>${esc(insight)}</span>
+    </div>` : ''}
+
+    ${precedentsHTML(cls, flags)}
+
+    <div class="case-id">🗄️ Saved locally — ID: ${id}</div>
+  `;
+
+  animCount(document.getElementById('animScore'), score);
+  requestAnimationFrame(() => setTimeout(() => {
+    const b = document.getElementById('confBar');
+    if (b) b.style.width = conf + '%';
+  }, 80));
+}
+
+/* ── Fallback local scoring (if API fails) ── */
+function localScore(title, description, caseType, yearsPending) {
+  let score = 10;
+  const text = (title + ' ' + description).toLowerCase();
+  const flags = [];
+  const reasons = [];
+
+  if (caseType === 'Bail') {
+    score += 30; reasons.push({text:'Bail matter affects personal liberty',icon:'⚖️',color:'rgba(229,57,53,0.12)',bonus:'+30'});
+  } else if (caseType === 'Criminal') {
+    score += 25; reasons.push({text:'Criminal case — public interest concern',icon:'🔴',color:'rgba(229,57,53,0.12)',bonus:'+25'});
+  } else if (caseType === 'Family/Matrimonial') {
+    score += 20; reasons.push({text:'Family dispute with emotional urgency',icon:'👨‍👩‍👧',color:'rgba(233,30,99,0.12)',bonus:'+20'});
+  } else if (caseType === 'Property') {
+    score += 15; reasons.push({text:'Property dispute — asset rights at stake',icon:'🏠',color:'rgba(245,124,0,0.12)',bonus:'+15'});
+  } else {
+    score += 10; reasons.push({text:'Civil matter — standard scheduling',icon:'📋',color:'rgba(100,100,200,0.12)',bonus:'+10'});
+  }
+
+  if (/medical|hospital|cancer|surgery|icu|dialysis|heart|emergency/.test(text)) {
+    score += 20; flags.push('medical');
+    reasons.push({text:'Medical emergency detected',icon:'🏥',color:'rgba(229,57,53,0.12)',bonus:'+20'});
+  }
+  if (/undertrial|detention|remand|jail|custody/.test(text)) {
+    score += 20; flags.push('undertrial');
+    reasons.push({text:'Undertrial prisoner detected',icon:'🔒',color:'rgba(230,81,0,0.12)',bonus:'+20'});
+  }
+  if (/women|woman|female|widow|victim|rape|domestic/.test(text)) {
+    score += 15; flags.push('women');
+    reasons.push({text:'Vulnerable individual involved',icon:'👩',color:'rgba(233,30,99,0.12)',bonus:'+15'});
+  }
+  if (/elderly|senior|aged|old man|old woman|70|75|80/.test(text)) {
+    score += 15; flags.push('elderly');
+    reasons.push({text:'Elderly party — expedited review needed',icon:'👴',color:'rgba(123,31,162,0.12)',bonus:'+15'});
+  }
+
+  const yearBonus = Math.min(yearsPending * 5, 25);
+  if (yearBonus > 0) {
+    score += yearBonus;
+    reasons.push({text:`Case pending for ${yearsPending} year${yearsPending!==1?'s':''}`,icon:'⏰',color:'rgba(100,100,200,0.12)',bonus:`+${yearBonus}`});
+  }
+
+  score = Math.max(0, Math.min(score, 100));
+  const urgency = score >= 80 ? 'Critical' : score >= 60 ? 'High' : score >= 40 ? 'Medium' : 'Low';
+
+  return {
+    priority_score: score, urgency_level: urgency,
+    classification: caseType, flags, reasons,
+    insight: score >= 80
+      ? 'This case matches critical patterns requiring immediate judicial attention. The combination of factors significantly elevates its priority.'
+      : score >= 60
+      ? 'Elevated urgency indicators consistent with high-priority matters requiring expedited hearing.'
+      : 'Standard scheduling applies. Monitor for any escalation in urgency factors.'
+  };
+}
+
+/* ── Analyze Case ── */
+async function analyzeCase() {
+  const title       = document.getElementById('caseTitle').value.trim();
+  const description = document.getElementById('caseDesc').value.trim();
+  const caseType    = document.getElementById('caseType').value;
+  const yearsPending= Math.max(0, parseInt(document.getElementById('yearsPending').value)||0);
+  const courtName   = document.getElementById('courtName')?.value.trim() || '';
+  const judgeName   = document.getElementById('judgeName')?.value.trim() || '';
+
+  let ok = true;
+  const et = document.getElementById('err-title');
+  const ed = document.getElementById('err-desc');
+  et.style.display = !title       ? 'block' : 'none'; if (!title)       ok = false;
+  ed.style.display = !description ? 'block' : 'none'; if (!description) ok = false;
+  if (!ok) { toast('Please fill in all required fields','error'); return; }
+
+  const btn = document.getElementById('analyzeBtn');
+  btn.disabled = true; btn.textContent = '⏳ Analyzing...';
+  document.getElementById('emptyState').style.display   = 'none';
+  document.getElementById('loadingState').style.display = 'block';
+  document.getElementById('resultContent').style.display= 'none';
+
+  try {
+    let aiResult;
+    try {
+      aiResult = await getAIAnalysis(title, description, caseType, yearsPending);
+    } catch(apiErr) {
+      console.warn('AI API failed, using local scoring:', apiErr.message);
+      aiResult = localScore(title, description, caseType, yearsPending);
+    }
+
+    const caseObj = {
+      id: 'case_' + Date.now(),
+      title, description, caseType, years_pending: yearsPending,
+      court_name: courtName || undefined, judge_name: judgeName || undefined,
+      status: 'Pending', created_at: new Date().toISOString(),
+      ...aiResult
+    };
+
+    caseStore.unshift(caseObj);
+    saveStore();
+    renderResult(caseObj);
+    document.getElementById('resultsPanel').scrollIntoView({behavior:'smooth',block:'nearest'});
+    toast('✅ Case analyzed — Score: ' + aiResult.priority_score, 'success');
+    loadHistory();
+    loadStats();
+  } catch(e) {
+    document.getElementById('loadingState').style.display = 'none';
+    document.getElementById('emptyState').style.display   = 'block';
+    toast('Error: ' + e.message, 'error');
+  } finally {
+    btn.disabled = false; btn.textContent = '⚡ Analyze & Prioritize Case';
+  }
+}
+
+/* ── File upload handlers ── */
+function onDragOver(e)  { e.preventDefault(); document.getElementById('dropZone').classList.add('over'); }
+function onDragLeave(e) { document.getElementById('dropZone').classList.remove('over'); }
+function onDrop(e)      { e.preventDefault(); document.getElementById('dropZone').classList.remove('over'); if(e.dataTransfer.files[0]) setFile(e.dataTransfer.files[0]); }
+function onFileSelect(e){ if(e.target.files[0]) setFile(e.target.files[0]); }
+function setFile(f) {
+  const ch = document.getElementById('fileChosen');
+  const nm = document.getElementById('fileChosenName');
+  ch.style.display = 'flex';
+  nm.textContent = f.name.length > 34 ? f.name.slice(0,31)+'...' : f.name;
+}
+function clearFile(e) {
+  e.stopPropagation();
+  document.getElementById('fileInput').value = '';
+  document.getElementById('fileChosen').style.display = 'none';
+  document.getElementById('fileResult').style.display = 'none';
+  document.getElementById('fileEmpty').style.display  = 'flex';
+}
+
+/* ── File keyword map ── */
+const FKWS = [
+  {w:['murder','homicide','302'],             s:60,cls:'Criminal',          fl:[]},
+  {w:['rape','pocso','sexual assault'],        s:60,cls:'Criminal',          fl:['women']},
+  {w:['bail','anticipatory bail','regular bail'],s:50,cls:'Bail',           fl:[]},
+  {w:['robbery','dacoity','extortion'],        s:40,cls:'Criminal',          fl:[]},
+  {w:['assault','grievous hurt','307'],        s:35,cls:'Criminal',          fl:[]},
+  {w:['domestic violence','dowry','498a'],     s:35,cls:'Family/Matrimonial',fl:['women']},
+  {w:['divorce','matrimonial','alimony'],      s:25,cls:'Family/Matrimonial',fl:[]},
+  {w:['land','property','encroachment','eviction'],s:20,cls:'Property',     fl:[]},
+  {w:['cancer','hospital','surgery','icu','dialysis'],s:30,cls:null,        fl:['medical']},
+  {w:['undertrial','detention','remand','jail'],s:25,cls:null,               fl:['undertrial']},
+  {w:['elderly','senior citizen','aged'],      s:15,cls:null,               fl:['elderly']}
+];
+
+async function analyzeFile() {
+  const fi = document.getElementById('fileInput');
+  if (!fi.files[0]) { toast('Please select a file first','error'); return; }
+  const file = fi.files[0];
+
+  document.getElementById('fileEmpty').style.display   = 'none';
+  document.getElementById('fileResult').style.display  = 'none';
+  document.getElementById('fileLoadSkel').style.display= 'block';
+
+  const btn = document.getElementById('fileBtn');
+  btn.disabled = true; btn.textContent = '⏳ Reading report...';
+
+  try {
+    let text = '';
+    if (file.type === 'text/plain' || file.name.endsWith('.txt')) {
+      text = await new Promise((res,rej) => {
+        const r = new FileReader();
+        r.onload = e => res(e.target.result||'');
+        r.onerror = () => rej(new Error('Cannot read file'));
+        r.readAsText(file);
+      });
+    }
+
+    const scan = (file.name + ' ' + text).toLowerCase();
+    let score = 15, cls = 'Civil', fls = [], words = [];
+
+    for (const rule of FKWS) {
+      for (const w of rule.w) {
+        if (scan.includes(w)) {
+          score += rule.s;
+          if (rule.cls && cls === 'Civil') cls = rule.cls;
+          rule.fl.forEach(f => { if (!fls.includes(f)) fls.push(f); });
+          words.push(w); break;
+        }
+      }
+    }
+    score = Math.max(0, Math.min(score, 100));
+    const urg = score >= 80 ? 'Critical' : score >= 60 ? 'High' : score >= 40 ? 'Medium' : 'Low';
+    const u = urgencyMeta(urg);
+    const conf = confidence(score);
+    const bcol = confColor(conf);
+    const reason = words.length ? `Keywords detected: <b>${words.slice(0,4).join(', ')}</b>.` : 'No specific keywords — general document pattern.';
+
+    document.getElementById('fileLoadSkel').style.display = 'none';
+    const panel = document.getElementById('fileResult');
+    panel.style.display = 'block';
+
+    panel.innerHTML = `
+      <div style="text-align:center;margin-bottom:13px">
+        <div style="font-family:'DM Serif Display',serif;font-size:2.3rem;color:${scoreColor(score)}" id="fAnimScore">0</div>
+        <div style="font-size:10.5px;color:#a0a0bb;letter-spacing:0.05em;text-transform:uppercase;margin:2px 0 7px">Priority Score</div>
+        <span class="urgency-badge ${u.cls}"><span class="dot ${u.dot}"></span>${urg} Priority</span>
+      </div>
+      <div class="conf-wrap">
+        <div class="conf-labels"><span>AI Confidence</span><span>${conf}%</span></div>
+        <div class="conf-track"><div class="conf-fill" id="fConfBar" style="background:${bcol}"></div></div>
+      </div>
+      <div class="file-row" style="margin-top:9px">
+        <span class="fr-lbl">Detected Classification</span><span class="fr-val">⚖️ ${cls}</span>
+      </div>
+      <div class="file-row">
+        <span class="fr-lbl">File</span>
+        <span class="fr-val" style="font-size:10.5px;max-width:130px;text-align:right;word-break:break-all">${esc(file.name)}</span>
+      </div>
+      <div class="file-row">
+        <span class="fr-lbl">Keywords Found</span><span class="fr-val">${words.length}</span>
+      </div>
+      ${fls.length ? `<div style="margin:9px 0 3px"><div style="font-size:10.5px;color:#8080a0;text-transform:uppercase;letter-spacing:0.05em;font-weight:700;margin-bottom:6px">Flags</div><div class="flags-wrap">${flagsHTML(fls)}</div></div>` : ''}
+      <div class="reason-box">📋 ${reason}<br><span style="font-size:10.5px;color:#a0a0bb">Based on document pattern recognition</span></div>
+      ${precedentsHTML(cls, fls)}
+    `;
+
+    animCount(document.getElementById('fAnimScore'), score);
+    requestAnimationFrame(() => setTimeout(() => {
+      const b = document.getElementById('fConfBar');
+      if (b) b.style.width = conf + '%';
+    }, 80));
+
+    toast('📄 Report analyzed — ' + urg + ' priority', 'info');
+  } catch(e) {
+    document.getElementById('fileLoadSkel').style.display = 'none';
+    document.getElementById('fileEmpty').style.display    = 'flex';
+    toast('Analysis failed: ' + e.message, 'error');
+  } finally {
+    btn.disabled = false; btn.textContent = '📄 Analyze Police Report';
+  }
+}
+
+/* ── History ── */
+function loadHistory() {
+  let filtered = caseStore;
+  if (filterState !== 'All') filtered = caseStore.filter(c => c.urgency_level === filterState);
+
+  const total = filtered.length;
+  document.getElementById('histCount').textContent = total + ' case' + (total!==1?'s':'');
+
+  const pages = Math.max(1, Math.ceil(total / LIMIT));
+  const start = (pageState - 1) * LIMIT;
+  const cases = filtered.slice(start, start + LIMIT);
+
+  const body = document.getElementById('histBody');
+  if (!cases.length) {
+    const msg = filterState !== 'All' ? `No ${filterState} priority cases` : 'No cases yet — submit one above';
+    body.innerHTML = `<tr><td colspan="8" class="no-results">${msg}</td></tr>`;
+    document.getElementById('pagination').innerHTML = '';
+    return;
+  }
+
+  body.innerHTML = cases.map(c => {
+    const u = urgencyMeta(c.urgency_level);
+    return `<tr>
+      <td class="score-cell" style="color:${scoreColor(c.priority_score)}">${c.priority_score}</td>
+      <td><span class="urgency-badge ${u.cls}" style="padding:3px 10px;font-size:11px">
+        <span class="dot ${u.dot}" style="width:6px;height:6px"></span>${c.urgency_level}
+      </span></td>
+      <td style="max-width:200px;font-size:12.5px;font-weight:500">${esc(c.title)}</td>
+      <td style="font-size:11.5px;color:#6060a0">⚖️ ${c.classification||c.caseType||'—'}</td>
+      <td style="font-size:11.5px;color:#a0a0bb">${c.years_pending}y</td>
+      <td>${miniFlags(c.flags)}</td>
+      <td><select class="status-sel" onchange="setStatus('${c.id}',this.value)">
+        <option ${c.status==='Pending'     ?'selected':''}>Pending</option>
+        <option ${c.status==='In Progress' ?'selected':''}>In Progress</option>
+        <option ${c.status==='Closed'      ?'selected':''}>Closed</option>
+      </select></td>
+      <td><button class="btn-del" onclick="removeCase('${c.id}')">✕</button></td>
+    </tr>`;
+  }).join('');
+
+  const pc = document.getElementById('pagination');
+  if (pages <= 1) { pc.innerHTML = ''; return; }
+  let h = '';
+  for (let i=1;i<=pages;i++) h += `<button class="page-btn ${i===pageState?'active':''}" onclick="goPage(${i})">${i}</button>`;
+  pc.innerHTML = h;
+}
+
+function setFilter(f, btn) {
+  filterState = f; pageState = 1;
+  document.querySelectorAll('.filter-btn').forEach(b => b.classList.remove('active'));
+  btn.classList.add('active');
+  loadHistory();
+}
+function goPage(n) { pageState = n; loadHistory(); }
+
+/* ── Status / Delete ── */
+function setStatus(id, status) {
+  const c = caseStore.find(x => x.id === id);
+  if (c) { c.status = status; saveStore(); loadStats(); toast(`Status → "${status}"`, 'info'); }
+}
+function removeCase(id) {
+  if (!confirm('Delete this case?')) return;
+  caseStore = caseStore.filter(x => x.id !== id);
+  saveStore();
+  toast('Case deleted','info');
+  loadHistory(); loadStats();
+}
+function clearAll() {
+  if (!confirm('Delete ALL cases? Cannot be undone.')) return;
+  caseStore = [];
+  saveStore();
+  toast('All cases cleared','info');
+  loadHistory(); loadStats();
+}
+
+/* ── Stats ── */
+function loadStats() {
+  const total    = caseStore.length;
+  const critical = caseStore.filter(c => c.urgency_level === 'Critical').length;
+  const high     = caseStore.filter(c => c.urgency_level === 'High').length;
+  const pending  = caseStore.filter(c => c.status === 'Pending').length;
+  const avg      = total ? Math.round(caseStore.reduce((s,c) => s + (c.priority_score||0), 0) / total) : 0;
+  document.getElementById('sTotal').textContent    = total;
+  document.getElementById('sCritical').textContent = critical;
+  document.getElementById('sHigh').textContent     = high;
+  document.getElementById('sAvg').textContent      = total ? avg : '—';
+  document.getElementById('sPending').textContent  = pending;
+}
+
+/* ── Toast ── */
+function toast(msg, type='success') {
+  const c = document.getElementById('toastContainer');
+  const t = document.createElement('div');
+  t.className = 'toast toast-' + type;
+  const i = {success:'✓',error:'✕',info:'ℹ'};
+  t.innerHTML = `<span>${i[type]||'•'}</span>${msg}`;
+  c.appendChild(t);
+  setTimeout(() => { t.style.opacity='0'; t.style.transform='translateX(18px)'; setTimeout(()=>t.remove(),300); }, 3200);
+}
+
+/* ── Escape ── */
+function esc(s) {
+  return String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+}
+
+/* ── Init ── */
+loadStats();
+loadHistory();
+toast('JustiChain AI ready ✓','success');
+</script>
+</body>
+</html>
