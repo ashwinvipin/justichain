@@ -4,257 +4,83 @@
   <meta charset="UTF-8"/>
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
   <title>JustiChain AI — Login</title>
-  <link href="https://fonts.googleapis.com/css2?family=DM+Serif+Display:ital@0;1&family=DM+Sans:opsz,wght@9..40,400;9..40,500;9..40,600&display=swap" rel="stylesheet"/>
-  <style>
-    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
 
+  <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600&display=swap" rel="stylesheet"/>
+
+  <style>
     body {
       font-family: 'DM Sans', sans-serif;
-      min-height: 100vh;
-      background: linear-gradient(135deg, #e8e6f5 0%, #f5eaf7 35%, #e4eef8 70%, #e8f3ee 100%);
+      background: linear-gradient(135deg,#e8e6f5,#e4eef8);
       display: flex;
       align-items: center;
       justify-content: center;
-      padding: 24px;
-      position: relative;
-      overflow: hidden;
+      height: 100vh;
     }
 
-    .blob { position: fixed; border-radius: 50%; filter: blur(80px); opacity: 0.22; pointer-events: none; z-index: 0; }
-    .blob1 { width: 520px; height: 520px; background: radial-gradient(circle, #7c4dff, #3f51b5); top: -180px; left: -180px; }
-    .blob2 { width: 440px; height: 440px; background: radial-gradient(circle, #00bcd4, #2196f3); bottom: -140px; right: -140px; }
-    .blob3 { width: 360px; height: 360px; background: radial-gradient(circle, #e91e63, #9c27b0); top: 55%; left: 42%; }
-
-    .wrapper {
-      position: relative;
-      z-index: 1;
-      width: 100%;
-      max-width: 420px;
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-      animation: fadeUp 0.6s ease;
-    }
-
-    /* Header */
-    .header { text-align: center; margin-bottom: 28px; }
-    .badge {
-      display: inline-flex;
-      align-items: center;
-      gap: 7px;
-      background: rgba(255,255,255,0.85);
-      backdrop-filter: blur(12px);
-      border: 1px solid rgba(255,255,255,0.6);
-      border-radius: 50px;
-      padding: 5px 16px;
-      font-size: 11px;
-      font-weight: 600;
-      color: #5b21c9;
-      letter-spacing: 0.08em;
-      text-transform: uppercase;
-      margin-bottom: 14px;
-    }
-    h1 {
-      font-family: 'DM Serif Display', serif;
-      font-size: clamp(2.4rem, 6vw, 3.2rem);
-      font-style: italic;
-      background: linear-gradient(135deg, #5b21c9, #8b5cf6, #7c3aed);
-      -webkit-background-clip: text;
-      -webkit-text-fill-color: transparent;
-      background-clip: text;
-      margin-bottom: 8px;
-    }
-    .sub { color: #7070a0; font-size: 13.5px; }
-
-    /* Card */
     .card {
-      width: 100%;
       background: #fff;
-      border-radius: 22px;
-      padding: 36px;
-      box-shadow: 0 8px 40px rgba(92,33,201,0.12);
-      border: 1px solid rgba(220,215,245,0.7);
+      padding: 30px;
+      border-radius: 16px;
+      box-shadow: 0 10px 30px rgba(0,0,0,0.1);
+      width: 300px;
+      text-align: center;
     }
 
-    /* Form */
-    label {
-      display: block;
-      font-size: 11px;
-      font-weight: 700;
-      color: #8080a0;
-      letter-spacing: 0.07em;
-      text-transform: uppercase;
-      margin-bottom: 7px;
-    }
-    .field { margin-bottom: 18px; }
-    .input-wrap { position: relative; }
-    .input-wrap svg {
-      position: absolute;
-      left: 13px;
-      top: 50%;
-      transform: translateY(-50%);
-      opacity: 0.4;
-      pointer-events: none;
-    }
     input {
       width: 100%;
-      padding: 13px 14px 13px 40px;
-      background: #fafafe;
-      border: 1.5px solid #e2e2ef;
-      border-radius: 12px;
-      font-family: 'DM Sans', sans-serif;
-      font-size: 14px;
-      color: #1a1a2e;
-      outline: none;
-      transition: border-color 0.2s, box-shadow 0.2s;
+      padding: 10px;
+      margin: 10px 0;
+      border-radius: 8px;
+      border: 1px solid #ccc;
     }
-    input:focus {
-      border-color: #7c3aed;
-      background: #fff;
-      box-shadow: 0 0 0 3px rgba(124,58,237,0.1);
-    }
-    input::placeholder { color: #b0b0c8; }
-    input.err { border-color: #e53935; box-shadow: 0 0 0 3px rgba(229,57,53,0.1); }
-
-    .error-msg { font-size: 11.5px; color: #e53935; font-weight: 500; margin-top: 5px; display: none; }
 
     button {
       width: 100%;
-      padding: 14px;
-      margin-top: 8px;
-      background: linear-gradient(135deg, #5b21c9, #7c3aed);
+      padding: 10px;
+      background: #5b21c9;
       color: #fff;
       border: none;
-      border-radius: 13px;
-      font-family: 'DM Sans', sans-serif;
-      font-size: 15px;
-      font-weight: 600;
+      border-radius: 8px;
       cursor: pointer;
-      letter-spacing: 0.02em;
-      transition: all 0.2s;
     }
-    button:hover { transform: scale(1.02); box-shadow: 0 8px 28px rgba(124,58,237,0.38); }
-    button:active { transform: scale(0.98); }
-    button:disabled { opacity: 0.6; cursor: not-allowed; transform: none; }
 
-    /* Toast */
-    .toast-wrap { position: fixed; top: 18px; right: 18px; z-index: 100; display: flex; flex-direction: column; gap: 8px; }
-    .toast {
-      padding: 11px 18px; border-radius: 12px; font-size: 13px; font-weight: 500;
-      color: #fff; display: flex; align-items: center; gap: 8px;
-      box-shadow: 0 4px 18px rgba(0,0,0,0.13); animation: fadeUp 0.3s ease;
-      transition: opacity 0.3s, transform 0.3s;
+    button:hover {
+      background: #7c3aed;
     }
-    .toast-success { background: linear-gradient(135deg,#2e7d32,#43a047); }
-    .toast-error   { background: linear-gradient(135deg,#c62828,#e53935); }
 
-    @keyframes fadeUp { from { opacity:0; transform:translateY(16px); } to { opacity:1; transform:translateY(0); } }
-    @keyframes shake  { 0%,100%{transform:translateX(0)} 20%{transform:translateX(-6px)} 40%{transform:translateX(6px)} 60%{transform:translateX(-4px)} 80%{transform:translateX(4px)} }
-    .shake { animation: shake 0.4s ease; }
+    h2 {
+      margin-bottom: 10px;
+    }
   </style>
 </head>
+
 <body>
 
-<div class="blob blob1"></div>
-<div class="blob blob2"></div>
-<div class="blob blob3"></div>
-<div class="toast-wrap" id="toastWrap"></div>
+<div class="card">
+  <h2>JustiChain AI</h2>
 
-<div class="wrapper">
+  <!-- 🔥 IMPORTANT FORM -->
+  <form method="POST">
+    
+    <input 
+      type="text" 
+      name="username" 
+      placeholder="Username" 
+      required
+    />
 
-  <div class="header">
-    <div class="badge">
-      <svg width="11" height="11" viewBox="0 0 11 11" fill="none">
-        <circle cx="5.5" cy="5.5" r="4.5" stroke="#5b21c9" stroke-width="1.3"/>
-        <path d="M5.5 3v2.5l1.5 1" stroke="#5b21c9" stroke-width="1.1" stroke-linecap="round"/>
-      </svg>
-      Indian Judiciary AI System
-    </div>
-    <h1>JustiChain AI</h1>
-    <p class="sub">Prioritizing Justice. Empowering Decisions.</p>
-  </div>
+    <input 
+      type="password" 
+      name="password" 
+      placeholder="Password" 
+      required
+    />
 
-  <div class="card">
+    <button type="submit">🔐 Login</button>
 
-    <div class="field">
-      <label for="username">Username</label>
-      <div class="input-wrap">
-        <svg width="16" height="16" viewBox="0 0 16 16" fill="none">
-          <circle cx="8" cy="5.5" r="2.5" stroke="#5b21c9" stroke-width="1.3"/>
-          <path d="M2.5 13c0-2.485 2.462-4.5 5.5-4.5s5.5 2.015 5.5 4.5" stroke="#5b21c9" stroke-width="1.3" stroke-linecap="round"/>
-        </svg>
-        <input type="text" id="username" placeholder="Enter your username" autocomplete="username"/>
-      </div>
-      <div class="error-msg" id="err-user">Please enter your username</div>
-    </div>
+  </form>
 
-    <div class="field">
-      <label for="password">Password</label>
-      <div class="input-wrap">
-        <svg width="16" height="16" viewBox="0 0 16 16" fill="none">
-          <rect x="3" y="7" width="10" height="7" rx="2" stroke="#5b21c9" stroke-width="1.3"/>
-          <path d="M5.5 7V5a2.5 2.5 0 015 0v2" stroke="#5b21c9" stroke-width="1.3" stroke-linecap="round"/>
-          <circle cx="8" cy="10.5" r="1" fill="#5b21c9"/>
-        </svg>
-        <input type="password" id="password" placeholder="Enter your password" autocomplete="current-password"/>
-      </div>
-      <div class="error-msg" id="err-pass">Please enter your password</div>
-    </div>
-
-    <button id="loginBtn" onclick="doLogin()">🔐 Login</button>
-
-  </div>
 </div>
 
-<script>
-  function doLogin() {
-    const u  = document.getElementById('username').value.trim();
-    const p  = document.getElementById('password').value.trim();
-    const eu = document.getElementById('err-user');
-    const ep = document.getElementById('err-pass');
-    const ui = document.getElementById('username');
-    const pi = document.getElementById('password');
-    let valid = true;
-
-    if (!u) {
-      eu.style.display = 'block'; ui.classList.add('err','shake');
-      setTimeout(() => ui.classList.remove('shake'), 400);
-      valid = false;
-    } else { eu.style.display = 'none'; ui.classList.remove('err'); }
-
-    if (!p) {
-      ep.style.display = 'block'; pi.classList.add('err','shake');
-      setTimeout(() => pi.classList.remove('shake'), 400);
-      valid = false;
-    } else { ep.style.display = 'none'; pi.classList.remove('err'); }
-
-    if (!valid) return;
-
-    const btn = document.getElementById('loginBtn');
-    btn.disabled = true;
-    btn.textContent = '⏳ Signing in...';
-
-    setTimeout(() => {
-      btn.disabled = false;
-      btn.textContent = '🔐 Login';
-      toast('✅ Welcome, ' + u + '!', 'success');
-      // window.location.href = 'justichain_ai_judiciary_system.html';
-    }, 1200);
-  }
-
-  function toast(msg, type = 'success') {
-    const wrap = document.getElementById('toastWrap');
-    const t = document.createElement('div');
-    t.className = 'toast toast-' + type;
-    t.innerHTML = `<span>${type === 'success' ? '✓' : '✕'}</span>${msg}`;
-    wrap.appendChild(t);
-    setTimeout(() => {
-      t.style.opacity = '0'; t.style.transform = 'translateX(18px)';
-      setTimeout(() => t.remove(), 300);
-    }, 3000);
-  }
-
-  document.addEventListener('keydown', e => { if (e.key === 'Enter') doLogin(); });
-</script>
 </body>
 </html>
